@@ -19,7 +19,7 @@
     .intro { padding:54px 0 26px; }
     .intro h1 { margin:0; font-size:clamp(32px,5vw,52px); line-height:1.08; letter-spacing:-.055em; font-weight:700; }
     .intro p { margin:12px 0 0; color:var(--secondary); font-size:16px; line-height:1.5; }
-    .workspace { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); gap:18px; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); align-items:start; gap:18px; }
     .panel { min-width:0; padding:22px; border:1px solid rgba(0,0,0,.05); border-radius:18px; background:var(--surface); box-shadow:var(--shadow); }
     .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
     h2 { margin:0; font-size:16px; line-height:1.2; letter-spacing:-.02em; }
@@ -49,23 +49,25 @@
     .live-banner { display:flex; align-items:center; gap:8px; margin-top:12px; padding:9px 11px; border-radius:9px; color:#087b5b; background:#e6f7ed; font-size:12px; }
     .live-banner i { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.2s infinite; }
     @keyframes pulse { 50% { opacity:.35; transform:scale(.75); } }
-    .result-panel { display:flex; flex-direction:column; }
+    .result-panel { display:flex; flex-direction:column; align-self:start; }
     .result-state { display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; color:var(--secondary); background:var(--soft); font-size:11px; }
     .result-state[data-tone="live"] { color:#087b5b; background:#e6f7ed; }
     .result-state[data-tone="done"] { color:#8a5d13; background:#fff2d7; }
     .result-number { display:flex; align-items:baseline; gap:8px; padding:23px 0 13px; border-bottom:1px solid var(--line); }
     .result-number strong { font-size:clamp(78px,10vw,116px); line-height:.86; letter-spacing:-.09em; font-variant-numeric:tabular-nums; }
     .result-number span { color:var(--secondary); font-size:18px; }
-    .result-sub { min-height:39px; padding-top:12px; color:var(--secondary); font-size:12px; line-height:1.6; }
-    .adjust { display:flex; align-items:center; gap:9px; margin-top:auto; padding-top:18px; }
+    .result-sub { min-height:0; padding-top:12px; color:var(--secondary); font-size:12px; line-height:1.6; }
+    .adjust { display:flex; align-items:center; gap:9px; margin-top:17px; padding-top:0; }
     .adjust button { width:38px; height:36px; padding:0; border:1px solid var(--line); border-radius:9px; color:var(--ink); background:#fff; font-size:20px; }
     .adjust button:hover:not(:disabled) { background:var(--soft); }
     .adjust output { min-width:42px; text-align:center; font-size:15px; font-variant-numeric:tabular-nums; }
     .result-actions { display:flex; gap:8px; margin-top:12px; }
     .result-actions .btn { width:100%; }
     .lower { display:grid; gap:14px; margin-top:14px; }
-    .records-empty { padding:20px 10px 8px; text-align:center; color:var(--secondary); font-size:12px; }
-    .record-list { display:grid; gap:7px; }
+    .lower > .panel:not(.method-card) { padding:16px 22px; }
+    .lower > .panel:not(.method-card) .panel-head { margin-bottom:0; }
+    .records-empty { padding:8px 0 0; text-align:left; color:var(--secondary); font-size:12px; }
+    .record-list { display:grid; gap:7px; margin-top:10px; }
     .record-row { display:grid; grid-template-columns:70px minmax(0,1fr) auto; align-items:center; gap:11px; padding:10px 12px; border:1px solid var(--line); border-radius:11px; background:#fbfbfd; }
     .record-count { color:var(--blue); font-size:22px; font-weight:650; font-variant-numeric:tabular-nums; letter-spacing:-.04em; }
     .record-count small { color:var(--secondary); font-size:11px; letter-spacing:0; }
@@ -115,7 +117,7 @@
         </section>
       </div>
       <div class="lower">
-        <section class="panel"><div class="panel-head"><h2>历史记录</h2><span class="record-summary" id="recordSummary">载入视频后显示</span></div><div class="records-empty" id="recordsEmpty">同一视频的多次结果会保存在这里。</div><div class="record-list" id="recordsList"></div></section>
+        <section class="panel"><div class="panel-head"><h2>历史记录</h2><span class="record-summary" id="recordSummary">载入视频后显示</span></div><div class="records-empty" id="recordsEmpty">选择视频后显示结果。</div><div class="record-list" id="recordsList"></div></section>
         <details class="panel method-card" id="methodCard"><summary><div class="panel-head"><h2>算法说明</h2><span class="panel-label">点击展开</span></div></summary><p class="method-intro">追踪身体上下运动，把一次完整起跳转换为一个计数。</p><div class="method-step"><b>1</b><div><strong>识别动作</strong><p>MoveNet 识别双髋和双脚位置。</p></div></div><div class="method-step"><b>2</b><div><strong>在线计数</strong><p>身体从上升转为下降，且幅度和间隔达标时加 1。</p></div></div><div class="algorithm-note">实时播放只使用在线采样，不再额外分析视频。</div></details>
       </div>
     </main>

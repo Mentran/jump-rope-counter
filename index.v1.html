@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>跳绳计数器</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #151b24;
+      --panel-2: #1b2430;
+      --text: #f5f7fa;
+      --muted: #aeb8c5;
+      --line: #2c3745;
+      --accent: #6ee7b7;
+      --accent-2: #60a5fa;
+      --danger: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 0%, #19304c 0, transparent 42%), var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 60px; }
+    .eyebrow { color: var(--accent); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 8px 0 10px; font-size: clamp(32px, 6vw, 58px); line-height: 1.05; letter-spacing: -.04em; }
+    .intro { color: var(--muted); max-width: 680px; line-height: 1.7; margin: 0 0 28px; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 18px; align-items: start; }
+    .card { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); border-radius: 22px; padding: 20px; box-shadow: 0 20px 80px #0004; }
+    .drop { border: 1px dashed #52708f; border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; transition: .2s ease; }
+    .drop:hover, .drop.drag { border-color: var(--accent); background: #6ee7b710; }
+    .drop strong { display: block; font-size: 17px; margin-bottom: 7px; }
+    .drop span { color: var(--muted); font-size: 13px; }
+    input[type=file] { display: none; }
+    video { width: 100%; max-height: 620px; display: block; object-fit: contain; border-radius: 14px; background: #05070a; margin-top: 16px; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    button { border: 0; border-radius: 11px; padding: 11px 16px; color: #07120f; background: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
+    button.secondary { color: var(--text); background: var(--panel-2); border: 1px solid var(--line); }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .status { color: var(--muted); font-size: 13px; line-height: 1.5; min-height: 21px; margin-top: 13px; }
+    .result { text-align: center; padding: 10px 0 22px; }
+    .result-label { color: var(--muted); font-size: 14px; }
+    .count { font-variant-numeric: tabular-nums; font-size: clamp(76px, 13vw, 134px); line-height: .95; letter-spacing: -.08em; margin: 12px 0 8px; color: var(--accent); }
+    .count small { font-size: 25px; letter-spacing: 0; color: var(--muted); margin-left: 8px; }
+    .confidence { color: var(--muted); font-size: 13px; }
+    .adjust { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 16px; }
+    .adjust button { width: 44px; height: 40px; padding: 0; font-size: 22px; }
+    .adjust output { min-width: 68px; font-size: 18px; font-variant-numeric: tabular-nums; }
+    .bar { height: 6px; border-radius: 999px; background: #24303c; overflow: hidden; margin: 6px 0 16px; }
+    .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s; }
+    .tips { border-top: 1px solid var(--line); padding-top: 18px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .tips b { color: var(--text); }
+    .events { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 16px; max-height: 90px; overflow: auto; }
+    .events i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: block; }
+    .note { color: var(--muted); font-size: 12px; margin-top: 22px; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } .wrap { padding-top: 26px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">LOCAL · AI VISION</div>
+    <h1>跳绳计数器</h1>
+    <p class="intro">上传一段跳绳视频，工具会用人体姿态识别追踪髋部上下运动，自动估算跳跃次数。视频只在当前浏览器处理，不上传服务器。</p>
+
+    <section class="grid">
+      <div class="card">
+        <label class="drop" id="drop" for="file">
+          <strong>拖入视频，或点击选择</strong>
+          <span>支持 MP4、MOV、WebM 等浏览器可播放格式</span>
+          <input id="file" type="file" accept="video/*" />
+        </label>
+        <video id="video" controls playsinline hidden></video>
+        <div class="controls">
+          <button id="analyze" disabled>开始自动计数</button>
+          <button id="realtime" class="secondary" disabled>实时播放计数</button>
+          <button id="camera" class="secondary">摄像头实时计数</button>
+          <button id="clear" class="secondary">清空</button>
+        </div>
+        <div class="status" id="status">等待上传视频</div>
+        <div class="bar"><i id="progress"></i></div>
+        <div class="tips"><b>使用建议：</b>让全身和跳绳尽量在画面内，机位固定，光线充足。检测结果可用右侧的 + / − 修正。</div>
+      </div>
+
+      <aside class="card">
+        <div class="result">
+          <div class="result-label">检测结果</div>
+          <div class="count"><span id="count">—</span><small>下</small></div>
+          <div class="confidence" id="confidence">尚未分析</div>
+          <div class="adjust">
+            <button class="secondary" id="minus" disabled>−</button>
+            <output id="adjusted">—</output>
+            <button class="secondary" id="plus" disabled>＋</button>
+          </div>
+        </div>
+        <div class="events" id="events" aria-label="每次跳跃的位置"></div>
+        <p class="note">实时模式会先加载模型，模型准备好后才播放和计数。计数只增不减，视频结束后保留最终结果。</p>
+      </aside>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fileInput = $('file');
+    const drop = $('drop');
+    const video = $('video');
+    const analyze = $('analyze');
+    const realtime = $('realtime');
+    const camera = $('camera');
+    const clear = $('clear');
+    const status = $('status');
+    const progress = $('progress');
+    const countEl = $('count');
+    const adjustedEl = $('adjusted');
+    const confidenceEl = $('confidence');
+    const plus = $('plus');
+    const minus = $('minus');
+    const eventsEl = $('events');
+    let objectUrl = null;
+    let detector = null;
+    let detectedCount = 0;
+    let adjustedCount = 0;
+    let cameraStream = null;
+    let liveRunning = false;
+    let liveRaf = 0;
+    let liveBusy = false;
+    let liveLastFrame = 0;
+    let liveSamples = [];
+    let liveLastCount = 0;
+    let liveCount = 0;
+
+    function setStatus(text) { status.textContent = text; }
+    function setProgress(value) { progress.style.width = `${Math.max(0, Math.min(100, value))}%`; }
+    function setCount(n) {
+      detectedCount = Math.max(0, Math.round(n));
+      adjustedCount = detectedCount;
+      countEl.textContent = detectedCount;
+      adjustedEl.value = adjustedCount;
+      plus.disabled = minus.disabled = false;
+    }
+    function setLiveCount(n, events) {
+      detectedCount = Math.max(0, Math.round(n));
+      adjustedCount = detectedCount;
+      countEl.textContent = detectedCount;
+      adjustedEl.value = adjustedCount;
+      plus.disabled = minus.disabled = false;
+      if (detectedCount !== liveLastCount) {
+        liveLastCount = detectedCount;
+        drawEvents(events, Math.max(video.duration || 0, liveSamples.length / 15));
+        setStatus(`实时识别中：${detectedCount} 下`);
+      }
+    }
+    function waitFor(target, event) {
+      return new Promise(resolve => target.addEventListener(event, resolve, { once: true }));
+    }
+    function seekVideo(time) {
+      return new Promise(resolve => {
+        if (Math.abs(video.currentTime - time) < .001) return resolve();
+        const done = () => { video.removeEventListener('seeked', done); resolve(); };
+        video.addEventListener('seeked', done);
+        video.currentTime = time;
+      });
+    }
+    function median(values) {
+      const a = values.filter(Number.isFinite).slice().sort((x, y) => x - y);
+      if (!a.length) return NaN;
+      const m = Math.floor(a.length / 2);
+      return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+    }
+    function percentile(values, p) {
+      const a = values.filter(Number.isFinite).slice().sort((x, y) => x - y);
+      if (!a.length) return NaN;
+      return a[Math.min(a.length - 1, Math.max(0, Math.floor((a.length - 1) * p)))];
+    }
+    function smooth(values, radius = 1) {
+      return values.map((_, i) => {
+        const part = values.slice(Math.max(0, i - radius), Math.min(values.length, i + radius + 1)).filter(Number.isFinite);
+        return part.length ? part.reduce((a, b) => a + b, 0) / part.length : NaN;
+      });
+    }
+    function findJumps(samples, fps) {
+      const raw = samples.map(x => x.y);
+      const valid = raw.filter(Number.isFinite);
+      if (valid.length < 8) return [];
+      const ys = smooth(raw, 1);
+      // 连续跳绳时髋部未必回到“站立基线”，所以找每个周期的局部最低点，
+      // 不用“回到基线”作为结束条件。髋部最低点对应身体离地的瞬间。
+      const p10 = percentile(valid, .10);
+      const p90 = percentile(valid, .90);
+      const prominence = Math.max(.004, Math.min(.025, (p90 - p10) * .10));
+      const candidates = [];
+      for (let i = 2; i < ys.length - 2; i++) {
+        if (!Number.isFinite(ys[i])) continue;
+        if (ys[i] > ys[i - 1] || ys[i] > ys[i + 1]) continue;
+        const localMin = Math.min(...ys.slice(i - 2, i + 3));
+        if (ys[i] !== localMin) continue;
+        const left = Math.max(...ys.slice(Math.max(0, i - 5), i));
+        const right = Math.max(...ys.slice(i + 1, Math.min(ys.length, i + 6)));
+        if (Math.min(left, right) - ys[i] >= prominence) candidates.push(i);
+      }
+      // 一个跳跃周期通常至少约 0.2 秒；相邻候选点只保留更低的那个。
+      const events = [];
+      const minDistance = Math.max(2, Math.round(fps * .20));
+      for (const i of candidates) {
+        if (!events.length || i - events[events.length - 1] >= minDistance) events.push(i);
+        else if (ys[i] < ys[events[events.length - 1]]) events[events.length - 1] = i;
+      }
+      return events.map(i => ({ index: i, time: i / fps }));
+    }
+    function drawEvents(events, duration) {
+      eventsEl.innerHTML = '';
+      events.forEach(e => {
+        const dot = document.createElement('i');
+        dot.title = `${e.time.toFixed(2)} 秒`;
+        dot.style.opacity = String(.35 + .65 * (e.time / Math.max(duration, .01)));
+        eventsEl.appendChild(dot);
+      });
+    }
+    async function getDetector() {
+      if (detector) return detector;
+      setStatus('正在加载姿态模型…');
+      await tf.ready();
+      detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, {
+        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        enableSmoothing: true
+      });
+      return detector;
+    }
+    function keypoint(pose, name) {
+      return pose.keypoints.find(k => k.name === name && (k.score ?? 1) > .25);
+    }
+    async function analyzeVideo() {
+      if (!video.src || !video.duration) return;
+      stopRealtime();
+      analyze.disabled = true;
+      plus.disabled = minus.disabled = true;
+      eventsEl.innerHTML = '';
+      setProgress(0);
+      try {
+        const d = await getDetector();
+        const fps = 15;
+        const total = Math.max(1, Math.ceil(video.duration * fps));
+        const canvas = document.createElement('canvas');
+        const ratio = (video.videoWidth && video.videoHeight) ? video.videoWidth / video.videoHeight : 1;
+        if (ratio >= 1) { canvas.width = 640; canvas.height = Math.round(640 / ratio); }
+        else { canvas.height = 640; canvas.width = Math.round(640 * ratio); }
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        const samples = [];
+        for (let i = 0; i < total; i++) {
+          const t = Math.min(video.duration - .001, i / fps);
+          await seekVideo(t);
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const poses = await d.estimatePoses(canvas, { flipHorizontal: false });
+          const pose = poses[0];
+          const lh = pose && keypoint(pose, 'left_hip');
+          const rh = pose && keypoint(pose, 'right_hip');
+          const ls = pose && keypoint(pose, 'left_shoulder');
+          const rs = pose && keypoint(pose, 'right_shoulder');
+          if (lh && rh) {
+            // 归一化髋部位置，减少视频分辨率和人物距离的影响。
+            const hip = (lh.y + rh.y) / 2 / canvas.height;
+            const shoulder = ls && rs ? (ls.y + rs.y) / 2 / canvas.height : hip - .12;
+            const scale = Math.max(.06, Math.abs(hip - shoulder));
+            samples.push({ y: hip, scale, t });
+          } else samples.push({ y: NaN, t });
+          setProgress((i + 1) / total * 100);
+          setStatus(`正在分析 ${Math.round((i + 1) / total * 100)}%…`);
+        }
+        const events = findJumps(samples, fps);
+        setCount(events.length);
+        drawEvents(events, video.duration);
+        const valid = samples.filter(s => Number.isFinite(s.y)).length / samples.length;
+        confidenceEl.textContent = `识别覆盖率 ${Math.round(valid * 100)}% · 可手动修正`;
+        setStatus(`完成：共检测到 ${events.length} 下`);
+      } catch (err) {
+        console.error(err);
+        setStatus('分析失败，请检查视频格式或刷新后重试。');
+        confidenceEl.textContent = '未完成分析';
+      } finally {
+        analyze.disabled = false;
+      }
+    }
+    function livePoseY(pose) {
+      const lh = pose && keypoint(pose, 'left_hip');
+      const rh = pose && keypoint(pose, 'right_hip');
+      if (!lh || !rh) return NaN;
+      return (lh.y + rh.y) / 2 / Math.max(1, video.videoHeight || 640);
+    }
+    async function liveFrame() {
+      if (!liveRunning || liveBusy) return;
+      liveBusy = true;
+      try {
+        const poses = await (await getDetector()).estimatePoses(video, { flipHorizontal: false });
+        const y = livePoseY(poses[0]);
+        if (Number.isFinite(y)) {
+          liveSamples.push({ y, t: liveSamples.length / 15 });
+          const events = findJumps(liveSamples, 15);
+          // 在线识别不能因为后续帧改变了局部极值就撤回已经报出的次数。
+          // 一次跳跃一旦确认，计数只允许递增。
+          const nextCount = Math.max(liveCount, events.length);
+          if (nextCount > liveCount) {
+            liveCount = nextCount;
+            setLiveCount(liveCount, events);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus('实时识别暂时失败，请重试。');
+      } finally {
+        liveBusy = false;
+      }
+    }
+    function liveLoop(now) {
+      if (!liveRunning) return;
+      if (now - liveLastFrame >= 100) {
+        liveLastFrame = now;
+        liveFrame();
+      }
+      liveRaf = requestAnimationFrame(liveLoop);
+    }
+    function stopRealtime() {
+      if (!liveRunning && !cameraStream) return;
+      liveRunning = false;
+      cancelAnimationFrame(liveRaf);
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        video.srcObject = null;
+      }
+      video.pause();
+      realtime.textContent = '实时播放计数';
+      camera.textContent = '摄像头实时计数';
+      analyze.disabled = !video.src;
+      realtime.disabled = !video.src;
+      setStatus('实时识别已停止');
+    }
+    async function startRealtime() {
+      if (!video.src || !video.duration) return;
+      if (liveRunning) return stopRealtime();
+      analyze.disabled = true;
+      realtime.disabled = true;
+      camera.disabled = true;
+      video.pause();
+      setStatus('正在加载模型，加载完成后才开始播放…');
+      try { await getDetector(); } catch (err) {
+        analyze.disabled = false; realtime.disabled = false; camera.disabled = false;
+        setStatus('模型加载失败，请检查网络后重试。');
+        return;
+      }
+      liveRunning = true;
+      liveBusy = false;
+      liveSamples = [];
+      liveLastCount = 0;
+      liveCount = 0;
+      setCount(0);
+      setStatus('模型已加载，开始实时识别…');
+      video.currentTime = 0;
+      await video.play();
+      realtime.textContent = '停止实时计数';
+      liveRaf = requestAnimationFrame(liveLoop);
+      video.onended = () => stopRealtime();
+    }
+    async function startCamera() {
+      if (liveRunning) return stopRealtime();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus('当前浏览器不支持摄像头。');
+        return;
+      }
+      try {
+        camera.disabled = true;
+        setStatus('正在加载模型，加载完成后才打开摄像头…');
+        await getDetector();
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.removeAttribute('src');
+        video.srcObject = cameraStream;
+        video.controls = false;
+        video.hidden = false;
+        await video.play();
+        analyze.disabled = true;
+        realtime.disabled = true;
+        camera.disabled = false;
+        camera.textContent = '停止摄像头计数';
+        liveRunning = true;
+        liveBusy = false;
+        liveSamples = [];
+        liveLastCount = 0;
+        liveCount = 0;
+        setCount(0);
+        setStatus('摄像头实时识别中：跳一下就加一下');
+        liveRaf = requestAnimationFrame(liveLoop);
+      } catch (err) {
+        console.error(err);
+        camera.disabled = false;
+        setStatus('无法打开摄像头，请检查浏览器权限。');
+      }
+    }
+    function loadFile(file) {
+      if (!file || !file.type.startsWith('video/')) return;
+      stopRealtime();
+      if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+      video.controls = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+      video.hidden = false;
+      analyze.disabled = true;
+      realtime.disabled = true;
+      setCount(0);
+      countEl.textContent = '—'; adjustedEl.value = '—'; plus.disabled = minus.disabled = true;
+      confidenceEl.textContent = '等待分析';
+      setProgress(0);
+      setStatus(`已载入：${file.name}`);
+    }
+    video.addEventListener('loadedmetadata', () => { analyze.disabled = false; realtime.disabled = false; });
+    fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+    ['dragenter', 'dragover'].forEach(type => drop.addEventListener(type, e => { e.preventDefault(); drop.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(type => drop.addEventListener(type, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+    drop.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+    analyze.addEventListener('click', analyzeVideo);
+    realtime.addEventListener('click', startRealtime);
+    camera.addEventListener('click', startCamera);
+    plus.addEventListener('click', () => { adjustedCount++; adjustedEl.value = adjustedCount; countEl.textContent = adjustedCount; });
+    minus.addEventListener('click', () => { adjustedCount = Math.max(0, adjustedCount - 1); adjustedEl.value = adjustedCount; countEl.textContent = adjustedCount; });
+    clear.addEventListener('click', () => {
+      stopRealtime();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = null; video.removeAttribute('src'); video.load(); video.hidden = true;
+      video.srcObject = null; analyze.disabled = true; realtime.disabled = true; plus.disabled = minus.disabled = true; countEl.textContent = '—'; adjustedEl.value = '—';
+      confidenceEl.textContent = '尚未分析'; eventsEl.innerHTML = ''; setProgress(0); setStatus('等待上传视频'); fileInput.value = '';
+    });
+  </script>
+</body>
+</html>

@@ -4,7 +4,9 @@
 
 ## 在线使用
 
-项目部署到 GitHub Pages 后，可直接在浏览器打开，无需安装应用。首次使用需要联网加载 TensorFlow.js 和 MoveNet 姿态模型。
+在线体验：<https://mentran.github.io/jump-rope-counter/>
+
+无需安装应用，首次使用需要联网加载 TensorFlow.js 和 MoveNet 姿态模型。
 
 ## 功能
 

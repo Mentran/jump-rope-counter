@@ -27,12 +27,24 @@ python3 -m http.server 8000
 
 ## 计数原理
 
-1. MoveNet 识别双髋和双脚的位置。
-2. 将身体上下位置归一化成运动信号，并做轻量平滑。
-3. 视频分析在完整时间序列中寻找局部最低点。
-4. 实时模式根据“上升 → 下降”的方向变化确认事件，同时检查动作幅度和最短间隔。
+计数的基本单位是一次完整的上下运动周期，而不是某一帧画面。这样可以把“人在空中”和“绳子经过脚下”等瞬时画面，收敛成一个可解释的动作事件。
 
-实时模式只使用在线采样，不会在播放结束后再次分析视频。模型加载阶段不会播放视频，也不会计数。
+1. **提取姿态**：MoveNet 识别双髋、双脚的位置和置信度。
+2. **构造信号**：将髋部和脚部的垂直位置归一化，得到身体上下运动信号，并做轻量平滑。
+3. **视频分析**：对完整时间序列寻找局部最低点，比较两侧动作幅度，并用最短间隔去除重复候选点。
+4. **实时计数**：按真实视频时间在线追踪“上升 → 下降”的方向变化；只有动作幅度和最短周期都达标时才加 1，已经确认的计数不会回退。
+
+实时模式和视频分析是两条独立流程。实时模式只使用在线采样，不会在播放结束后再次分析视频；模型加载阶段不会播放视频，也不会计数。
+
+## 调用的库与版本
+
+项目没有 npm 构建步骤，页面直接通过 CDN 加载两个前端库：
+
+- [TensorFlow.js 4.22.0](https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js)：在浏览器中运行张量计算和姿态推理。
+- [@tensorflow-models/pose-detection 2.1.3](https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js)：提供姿态检测接口。
+- **MoveNet SinglePose Lightning**：通过 `pose-detection` 创建，用于单人实时姿态识别。
+
+页面使用浏览器原生的 File API、`<video>`、Canvas、`requestAnimationFrame`、LocalStorage 和 WebRTC 摄像头接口，没有后端服务，也没有上传视频的接口。
 
 ## 适用范围
 
@@ -45,7 +57,6 @@ python3 -m http.server 8000
 ```text
 index.html                       主页面与全部前端逻辑
 .github/workflows/deploy-pages.yml  GitHub Pages 自动部署
-index.v1.html                    早期页面版本，仅作历史参考
 ```
 
 ## 技术栈

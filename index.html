@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>跳绳计数器</title>
   <style>
-    :root { --canvas:#f5f5f7; --surface:#fff; --ink:#1d1d1f; --secondary:#6e6e73; --line:#d2d2d7; --blue:#0071e3; --blue-hover:#0077ed; --green:#34c759; --soft:#f2f2f7; --shadow:0 12px 34px rgba(0,0,0,.06); }
+    :root { --canvas:#f5f5f7; --surface:#fff; --ink:#1d1d1f; --secondary:#6e6e73; --line:#d2d2d7; --blue:#0071e3; --blue-hover:#0077ed; --green:#34c759; --soft:#f2f2f7; --shadow:0 3px 18px rgba(0,0,0,.04); }
     * { box-sizing:border-box; }
     [hidden] { display:none !important; }
     body { margin:0; color:var(--ink); background:var(--canvas); font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",sans-serif; -webkit-font-smoothing:antialiased; }
@@ -24,7 +24,6 @@
     .repo-links .star-link:hover { border-color:#aaa; background:#fff; }
     .intro { padding:54px 0 26px; }
     .intro h1 { margin:0; font-size:clamp(32px,5vw,52px); line-height:1.08; letter-spacing:-.055em; font-weight:700; }
-    .intro p { margin:12px 0 0; color:var(--secondary); font-size:16px; line-height:1.5; }
     .workspace { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); align-items:start; gap:18px; }
     .panel { min-width:0; padding:22px; border:1px solid rgba(0,0,0,.05); border-radius:18px; background:var(--surface); box-shadow:var(--shadow); }
     .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
@@ -55,23 +54,23 @@
     .live-banner i { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.2s infinite; }
     @keyframes pulse { 50% { opacity:.35; transform:scale(.75); } }
     .result-panel { display:flex; flex-direction:column; align-self:start; }
+    .result-panel .panel-head { margin-bottom:4px; }
     .result-state { display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; color:var(--secondary); background:var(--soft); font-size:11px; }
     .result-state[data-tone="live"] { color:#087b5b; background:#e6f7ed; }
     .result-state[data-tone="done"] { color:#8a5d13; background:#fff2d7; }
-    .result-number { display:flex; align-items:baseline; gap:8px; padding:23px 0 13px; border-bottom:1px solid var(--line); }
-    .result-number strong { font-size:clamp(78px,10vw,116px); line-height:.86; letter-spacing:-.09em; font-variant-numeric:tabular-nums; }
+    .result-number { display:flex; align-items:baseline; gap:8px; padding:7px 0 8px; border-bottom:1px solid var(--line); }
+    .result-number strong { font-size:clamp(68px,8vw,94px); line-height:.86; letter-spacing:-.09em; font-variant-numeric:tabular-nums; }
     .result-number span { color:var(--secondary); font-size:18px; }
-    .result-sub { min-height:0; padding-top:12px; color:var(--secondary); font-size:12px; line-height:1.6; }
-    .adjust { display:flex; align-items:center; gap:9px; margin-top:17px; padding-top:0; }
+    .adjust { display:flex; align-items:center; gap:9px; margin-top:10px; padding-top:0; }
     .adjust button { width:38px; height:36px; padding:0; border:1px solid var(--line); border-radius:9px; color:var(--ink); background:#fff; font-size:20px; }
     .adjust button:hover:not(:disabled) { background:var(--soft); }
     .adjust output { min-width:42px; text-align:center; font-size:15px; font-variant-numeric:tabular-nums; }
     .result-actions { display:flex; gap:8px; margin-top:12px; }
     .result-actions .btn { width:100%; }
     .daily-panel { margin-top:18px; padding:19px 22px; }
-    .daily-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-    .daily-head h2 { display:flex; align-items:baseline; gap:9px; }
-    .month-summary { color:var(--secondary); font-size:11px; font-weight:400; letter-spacing:0; }
+    .daily-head { display:grid; grid-template-columns:1fr auto; grid-template-areas:"title nav" "summary nav"; align-items:center; gap:3px 12px; margin-bottom:12px; }
+    .daily-head h2 { grid-area:title; }
+    .month-summary { grid-area:summary; color:var(--secondary); font-size:10px; line-height:1.2; }
     .month-nav { display:flex; align-items:center; gap:10px; }
     .month-nav strong { min-width:72px; text-align:center; font-size:13px; font-variant-numeric:tabular-nums; }
     .month-nav button { display:grid; place-items:center; width:30px; height:30px; padding:0; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:#fff; font-size:16px; }
@@ -97,14 +96,12 @@
     .day-record-meta { margin-top:2px; color:var(--secondary); font-size:10px; }
     .delete-record { width:26px; height:26px; border:0; border-radius:7px; color:#8e8e93; background:transparent; font-size:17px; }
     .delete-record:hover { color:#c93434; background:#fff; }
-    .daily-empty { grid-column:1/-1; padding:6px 0 1px; color:var(--secondary); font-size:11px; }
     .method-peek { position:relative; }
     .method-peek summary { list-style:none; cursor:pointer; }
     .method-peek summary::-webkit-details-marker { display:none; }
     .method-popover { position:absolute; top:37px; left:0; z-index:10; width:250px; padding:13px 14px; border:1px solid rgba(0,0,0,.07); border-radius:12px; background:rgba(255,255,255,.98); box-shadow:0 12px 30px rgba(0,0,0,.12); }
     .method-popover strong { display:block; font-size:12px; }
     .method-popover p { margin:6px 0 0; color:var(--secondary); font-size:11px; line-height:1.55; }
-    footer { margin-top:20px; color:#98989d; text-align:center; font-size:11px; }
     @media (max-width:820px) { .intro { padding-top:38px; } .workspace { grid-template-columns:1fr; } .result-panel { min-height:0; } .adjust { margin-top:14px; } }
     @media (max-width:520px) { .shell { width:min(100% - 24px,1060px); padding-top:14px; } .topbar { gap:8px; } .header-actions { gap:7px; } .repo-links { gap:5px; } .repo-links .star-link { padding:4px 7px; } .local-chip { font-size:10px; } .intro { padding:34px 0 20px; } .intro h1 { font-size:34px; } .panel { padding:17px; border-radius:15px; } .control-row .btn { flex:1 1 46%; } .daily-panel { padding:15px 13px; } .weekdays,.calendar-grid { gap:2px; } .calendar-day,.calendar-blank { min-height:44px; } .calendar-day { border-radius:7px; } .calendar-day .day-count { font-size:8px; } .daily-detail { align-items:flex-start; flex-direction:column; gap:2px; } .day-records { grid-template-columns:1fr; } .method-popover { width:220px; } }
   </style>
@@ -112,7 +109,7 @@
 <body>
   <div class="shell">
     <header class="topbar"><div class="brand"><details class="method-peek"><summary class="brand-mark" aria-label="查看计数原理" title="查看计数原理">↗</summary><div class="method-popover"><strong>计数原理</strong><p>识别双髋和双脚的上下运动；当上升、下降的幅度与间隔都达标，就记为 1 下。</p></div></details><div>跳绳计数器</div></div><div class="header-actions"><div class="local-chip"><i></i> 仅在本机处理</div><nav class="repo-links" aria-label="项目链接"><a href="https://github.com/Mentran/jump-rope-counter" target="_blank" rel="noreferrer">GitHub ↗</a><a class="star-link" href="https://github.com/Mentran/jump-rope-counter" target="_blank" rel="noreferrer" aria-label="在 GitHub 上为项目点 Star">★ <span id="starCount">Star</span></a></nav></div></header>
-    <section class="intro"><h1>上传视频，开始计数</h1><p>选择一种方式，数清每一次跳跃。</p></section>
+    <section class="intro"><h1>上传视频，开始计数</h1></section>
     <main>
       <div class="workspace">
         <section class="panel">
@@ -121,20 +118,20 @@
           <div class="video-stage" id="videoStage"><video id="video" controls playsinline hidden></video><div class="empty-stage" id="emptyStage"><b>↗</b><span>还没有选择视频</span></div></div>
           <div class="control-row"><button class="btn" id="analyze" disabled>视频分析</button><button class="btn secondary" id="realtime" disabled>实时播放</button><button class="btn secondary" id="camera">摄像头</button><button class="btn ghost" id="clear">清空</button></div>
           <div class="status-row"><span id="status">等待上传视频</span></div>
-          <div class="progress-wrap"><div class="progress"><i id="progress"></i></div><span id="progressText">0%</span></div>
+          <div class="progress-wrap" id="progressWrap" hidden><div class="progress"><i id="progress"></i></div><span id="progressText">0%</span></div>
           <div class="live-banner" id="liveBanner" hidden><i></i><span>实时识别中 · 每确认一次起跳，计数增加 1</span></div>
         </section>
         <section class="panel result-panel">
           <div class="panel-head"><h2>计数</h2><span class="result-state" id="resultState">未开始</span></div>
           <div class="result-number"><strong id="count">—</strong><span>下</span></div>
-          <div class="result-sub" id="resultSub">选择一种计数方式开始。</div>
           <div class="adjust"><button id="minus" disabled>−</button><output id="adjusted">—</output><button id="plus" disabled>＋</button><span class="panel-label">手动校正</span></div>
           <div class="result-actions"><button class="btn" id="save" disabled>保存结果</button></div>
         </section>
       </div>
       <section class="panel daily-panel" aria-labelledby="dailyTitle">
         <div class="daily-head">
-          <h2 id="dailyTitle">每日打卡 <span class="month-summary" id="monthSummary"></span></h2>
+          <h2 id="dailyTitle">每日打卡</h2>
+          <span class="month-summary" id="monthSummary"></span>
           <div class="month-nav"><button id="prevMonth" type="button" aria-label="上个月">‹</button><strong id="monthLabel"></strong><button id="nextMonth" type="button" aria-label="下个月">›</button></div>
         </div>
         <div class="weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
@@ -145,7 +142,6 @@
         <div class="day-records" id="dayRecords"></div>
       </section>
     </main>
-    <footer>本地处理 · 结果保存在当前设备</footer>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
@@ -153,8 +149,8 @@
     const $ = id => document.getElementById(id);
     const fileInput=$('file'), drop=$('drop'), video=$('video'), videoStage=$('videoStage'), emptyStage=$('emptyStage');
     const analyze=$('analyze'), realtime=$('realtime'), camera=$('camera'), clear=$('clear'), save=$('save');
-    const statusEl=$('status'), videoState=$('videoState'), resultState=$('resultState'), resultSub=$('resultSub');
-    const progress=$('progress'), progressText=$('progressText'), liveBanner=$('liveBanner');
+    const statusEl=$('status'), videoState=$('videoState'), resultState=$('resultState');
+    const progress=$('progress'), progressText=$('progressText'), progressWrap=$('progressWrap'), liveBanner=$('liveBanner');
     const countEl=$('count'), adjustedEl=$('adjusted'), plus=$('plus'), minus=$('minus');
     const monthLabel=$('monthLabel'), monthSummary=$('monthSummary'), calendarGrid=$('calendarGrid');
     const selectedDateLabel=$('selectedDateLabel'), daySummary=$('daySummary'), dayRecords=$('dayRecords');
@@ -261,7 +257,7 @@
       for(const record of monthRecords){const key=recordDateKey(record);totals.set(key,(totals.get(key)||0)+record.count);}
       monthLabel.textContent=formatMonth(visibleMonth);
       const monthTotal=[...totals.values()].reduce((sum,n)=>sum+n,0);
-      monthSummary.textContent=monthRecords.length?`${totals.size} 天 · ${formatCount(monthTotal)} 下`:'本月还没有记录';
+      monthSummary.textContent=`${totals.size} 天 · ${formatCount(monthTotal)} 下`;
       const leading=(monthStart.getDay()+6)%7,cellCount=Math.ceil((leading+daysInMonth)/7)*7,todayKey=localDateKey(today);
       let cells='';
       for(let cell=0;cell<cellCount;cell++){
@@ -275,15 +271,15 @@
       const dayItems=records.filter(r=>recordDateKey(r)===selectedDate).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)),dayTotal=dayItems.reduce((sum,r)=>sum+r.count,0);
       selectedDateLabel.textContent=dateLabel(selectedDate);
       daySummary.textContent=dayItems.length?`${formatCount(dayTotal)} 下 · ${dayItems.length} 次`:'尚无记录';
-      dayRecords.innerHTML=dayItems.length?dayItems.map(r=>`<article class="day-record"><div class="day-record-info"><div class="day-record-count">${formatCount(r.count)} 下</div><div class="day-record-meta">${escapeHtml(r.method)} · ${formatTime(r.createdAt)}</div></div><button class="delete-record" type="button" data-delete-record="${escapeHtml(r.videoId)}" aria-label="删除 ${formatCount(r.count)} 下记录">×</button></article>`).join(''):'<div class="daily-empty">这一天还没有保存的跳绳记录</div>';
+      dayRecords.innerHTML=dayItems.map(r=>`<article class="day-record"><div class="day-record-info"><div class="day-record-count">${formatCount(r.count)} 下</div><div class="day-record-meta">${escapeHtml(r.method)} · ${formatTime(r.createdAt)}</div></div><button class="delete-record" type="button" data-delete-record="${escapeHtml(r.videoId)}" aria-label="删除 ${formatCount(r.count)} 下记录">×</button></article>`).join('');
       $('prevMonth').disabled=year<2000;
       $('nextMonth').disabled=year===today.getFullYear()&&month===today.getMonth();
     }
     async function loadGitHubStars(){try{const response=await fetch('https://api.github.com/repos/Mentran/jump-rope-counter',{headers:{Accept:'application/vnd.github+json'}});if(!response.ok)return;const data=await response.json();if(Number.isFinite(data.stargazers_count))$('starCount').textContent=`${data.stargazers_count} Star`;}catch{}}
     function setVideoLoaded(file,key){currentFile=file;currentVideoKey=key;videoState.textContent=file.name;videoState.title=file.name;emptyStage.hidden=true;videoStage.classList.add('has-video');}
     async function fileFingerprint(file){if(!crypto?.subtle)return `${file.name}:${file.size}:${file.lastModified}`;const digest=await crypto.subtle.digest('SHA-256',await file.arrayBuffer());return `sha256:${Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('')}`;}
-    function resetResult(){currentResult=null;detectedCount=adjustedCount=null;countEl.textContent='—';adjustedEl.value='—';plus.disabled=minus.disabled=true;save.disabled=true;save.textContent='保存结果';setResultTone('未开始');resultSub.textContent='选择一种计数方式开始。';}
-    function updateResultMeta(method){setResultTone(method,method.includes('实时')||method==='摄像头'?'live':'done');resultSub.textContent='检查次数后可手动校正，再保存到当天记录。';}
+    function resetResult(){currentResult=null;detectedCount=adjustedCount=null;countEl.textContent='—';adjustedEl.value='—';plus.disabled=minus.disabled=true;save.disabled=true;save.textContent='保存结果';setResultTone('未开始');}
+    function updateResultMeta(method){setResultTone(method,method.includes('实时')||method==='摄像头'?'live':'done');}
     function seekVideo(time){return new Promise(resolve=>{if(Math.abs(video.currentTime-time)<.001)return resolve();const done=()=>{video.removeEventListener('seeked',done);resolve();};video.addEventListener('seeked',done);video.currentTime=time;});}
     async function getDetector(){if(detector)return detector;setStatus('正在加载模型…');await tf.ready();detector=await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet,{modelType:poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,enableSmoothing:false});return detector;}
     function makeResult(count,method){return {count,method,videoId:currentVideoKey||'unknown-video'};}
@@ -298,14 +294,14 @@
     }
     async function analyzeVideo(){
       if(!video.src||!video.duration)return;
-      stopRealtime();analyze.disabled=realtime.disabled=camera.disabled=true;save.disabled=true;save.textContent='保存结果';setProgress(0);setResultTone('分析中…');setStatus('准备视频分析…');
+      stopRealtime();analyze.disabled=realtime.disabled=camera.disabled=true;save.disabled=true;save.textContent='保存结果';progressWrap.hidden=false;setProgress(0);setResultTone('分析中…');setStatus('准备视频分析…');
       try{
         const d=await getDetector(),fps=15,total=Math.max(1,Math.ceil(video.duration*fps)),canvas=document.createElement('canvas'),ratio=video.videoWidth/video.videoHeight||1;
         if(ratio>=1){canvas.width=640;canvas.height=Math.round(640/ratio);}else{canvas.height=640;canvas.width=Math.round(640*ratio);}
         const ctx=canvas.getContext('2d'),samples=[];
         for(let i=0;i<total;i++){await seekVideo(Math.min(video.duration-.001,i/fps));ctx.drawImage(video,0,0,canvas.width,canvas.height);const pose=(await d.estimatePoses(canvas,{flipHorizontal:false}))[0];samples.push({...extractSignal(pose,canvas.height),t:i/fps});setProgress((i+1)/total*100);setStatus(`分析中 ${Math.round((i+1)/total*100)}%…`);}
         const events=findJumps(samples,fps);setCount(events.length);updateResultMeta('视频分析');currentResult=makeResult(events.length,'视频分析');save.disabled=false;setStatus(`完成：检测到 ${events.length} 下`);
-      }catch(err){console.error(err);setResultTone('失败');resultSub.textContent='模型或视频读取失败，请刷新后重试。';setStatus('分析失败');}
+      }catch(err){console.error(err);setResultTone('失败');setStatus('分析失败：模型或视频读取失败');}
       finally{analyze.disabled=false;realtime.disabled=!video.src;camera.disabled=false;}
     }
     async function liveFrame(){
@@ -327,12 +323,12 @@
       if(!video.src||!video.duration)return;if(liveRunning)return stopRealtime(false);
       analyze.disabled=realtime.disabled=camera.disabled=true;video.pause();setStatus('正在加载模型，完成后才开始播放…');
       try{await getDetector();}catch{analyze.disabled=realtime.disabled=camera.disabled=false;setStatus('模型加载失败，请检查网络');return;}
-      liveMethod='实时播放';liveRunning=true;liveBusy=false;resetLiveState();resetResult();setCount(0);setResultTone('实时识别','live');liveBanner.hidden=false;realtime.disabled=false;camera.disabled=true;realtime.textContent='停止计数';
+      progressWrap.hidden=true;liveMethod='实时播放';liveRunning=true;liveBusy=false;resetLiveState();resetResult();setCount(0);setResultTone('实时识别','live');liveBanner.hidden=false;realtime.disabled=false;camera.disabled=true;realtime.textContent='停止计数';
       await seekVideo(0);await liveFrame();await video.play();liveRaf=requestAnimationFrame(liveLoop);video.onended=()=>stopRealtime(true);
     }
     async function startCamera(){
       if(liveRunning)return stopRealtime(false);if(!navigator.mediaDevices?.getUserMedia)return setStatus('当前浏览器不支持摄像头');
-      camera.disabled=true;setStatus('正在加载模型，完成后才打开摄像头…');
+      progressWrap.hidden=true;camera.disabled=true;setStatus('正在加载模型，完成后才打开摄像头…');
       try{
         await getDetector();cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
         video.removeAttribute('src');video.srcObject=cameraStream;video.controls=false;video.hidden=false;emptyStage.hidden=true;videoStage.classList.add('has-video');videoState.textContent='摄像头实时';await video.play();
@@ -341,7 +337,7 @@
     }
     async function loadFile(file){
       if(!file||!file.type.startsWith('video/'))return;
-      stopRealtime();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);video.srcObject=null;video.controls=true;video.src=objectUrl;video.hidden=false;emptyStage.hidden=true;videoStage.classList.add('has-video');resetResult();setProgress(0);setStatus('正在读取视频…');analyze.disabled=realtime.disabled=true;
+      stopRealtime();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);video.srcObject=null;video.controls=true;video.src=objectUrl;video.hidden=false;emptyStage.hidden=true;videoStage.classList.add('has-video');resetResult();progressWrap.hidden=true;setProgress(0);setStatus('正在读取视频…');analyze.disabled=realtime.disabled=true;
       const key=await fileFingerprint(file);setVideoLoaded(file,key);
     }
     fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
@@ -357,7 +353,7 @@
     dayRecords.addEventListener('click',e=>{const button=e.target.closest('[data-delete-record]');if(!button)return;const next=records.filter(r=>!(r.videoId===button.dataset.deleteRecord&&recordDateKey(r)===selectedDate));if(!persistRecords(next)){setStatus('无法删除：浏览器存储空间不可用');return;}records=next;renderDailyLog();});
     plus.addEventListener('click',()=>{if(adjustedCount!==null){adjustedCount++;adjustedEl.value=adjustedCount;countEl.textContent=adjustedCount;}});
     minus.addEventListener('click',()=>{if(adjustedCount!==null){adjustedCount=Math.max(0,adjustedCount-1);adjustedEl.value=adjustedCount;countEl.textContent=adjustedCount;}});
-    clear.addEventListener('click',()=>{stopRealtime();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;currentFile=null;currentVideoKey=null;video.removeAttribute('src');video.load();video.hidden=true;videoStage.classList.remove('has-video');emptyStage.hidden=false;videoState.textContent='未载入视频';resetResult();setProgress(0);setStatus('等待上传视频');fileInput.value='';});
+    clear.addEventListener('click',()=>{stopRealtime();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;currentFile=null;currentVideoKey=null;video.removeAttribute('src');video.load();video.hidden=true;videoStage.classList.remove('has-video');emptyStage.hidden=false;videoState.textContent='未载入视频';resetResult();progressWrap.hidden=true;setProgress(0);setStatus('等待上传视频');fileInput.value='';});
     renderDailyLog();loadGitHubStars();
   </script>
 </body>
